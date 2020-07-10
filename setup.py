@@ -6,51 +6,25 @@
 import os
 import sys
 
-min_version = (2, 3)
+# setuptools has python_requires, but distutils doesn't, so we test the
+# Python version manually:
+min_version = (2, 7)
 error_msg = ("Sorry, this package is for Python %d.%d and higher only." %
              min_version)
-
 try:
     if sys.version_info < min_version:
         sys.exit(error_msg)
 except AttributeError:  # sys.version_info was introduced in Python 2.0
     sys.exit(error_msg)
 
-# Determination of the directory that contains the source code:
-if os.path.exists('uncertainties'):
-    # Case of a direct download of a Python-version-specific Git
-    # branch:
-    package_dir = 'uncertainties'
-else:
-    # Case of a PyPI package download:
-    if sys.version_info >= (2, 7):
-        package_dir = 'uncertainties-py27'
-    else:
-        package_dir = 'uncertainties-py23'
-
-#! The following code was intended to automatically fetch the version
-# number; however, it fails when run from Python3 if the downloaded
-# code is not the Python 3 version.  An alternative approach would be
-# to run 2to3 just before, instead of using build_py_2to3 (which does
-# not modify the source), but care should be taken so that users can
-# run the setup.py script many times anyway.
-## Access to the local uncertainties package (and not to an already
-## installed uncertainties package):
-# sys.path.insert(0, package_dir)
-# uncertainties = __import__(package_dir)
-
 # Common options for distutils/setuptools's setup():
 setup_options = dict(
     name='uncertainties',
-    version='3.1.3',
+    version='3.1.4',
     author='Eric O. LEBIGOT (EOL)',
     author_email='eric.lebigot@normalesup.org',
     url='http://uncertainties-python-package.readthedocs.io/',
-    license='''\
-This software can be used under one of the following two licenses: \
-(1) The Revised BSD License. \
-(2) Any other license, as long as it is obtained from the original \
-author.''',
+    license='Revised BSD License',
     description=('Transparent calculations with uncertainties on the'
                  ' quantities involved (aka error propagation);'
                  ' fast calculation of derivatives'),
@@ -157,6 +131,7 @@ Version history
 
 Main changes:
 
+- 3.1.4: Python 2.7+ is now required.
 - 3.1.2: Fix for NumPy 1.17 and ``unumpy.ulinalg.pinv()``.
 - 3.1: Variables built through a correlation or covariance matrix, and that
   have uncertainties that span many orders of magnitude are now
@@ -293,11 +268,6 @@ Main changes:
 .. _main website: http://uncertainties-python-package.readthedocs.io/
 .. _code updater: http://uncertainties-python-package.readthedocs.io/en/latest/index.html#migration-from-version-1-to-version-2
 .. _formatting: http://uncertainties-python-package.readthedocs.io/en/latest/user_guide.html#printing''',
-    keywords=[
-        'error propagation', 'uncertainties', 'uncertainty calculations',
-        'standard deviation', 'derivatives', 'partial derivatives',
-        'differentiation'
-    ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -307,10 +277,6 @@ Main changes:
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.3',
-        'Programming Language :: Python :: 2.4',
-        'Programming Language :: Python :: 2.5',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         # Python 3.1 failed because of a problem with NumPy 1.6.1 (whereas
@@ -322,6 +288,7 @@ Main changes:
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: Implementation :: Jython',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Education',
@@ -334,8 +301,11 @@ Main changes:
         'Topic :: Utilities'
     ],
 
-    # Where to find the source code:
-    package_dir={'uncertainties': package_dir},
+    keywords=[
+        'error propagation', 'uncertainties', 'uncertainty calculations',
+        'standard deviation', 'derivatives', 'partial derivatives',
+        'differentiation'
+    ],
 
     # Files are defined in MANIFEST (which is automatically created by
     # python setup.py sdist bdist_wheel):
@@ -344,7 +314,7 @@ Main changes:
         'uncertainties.lib1to2.fixes'
     ],
 
-    # Wheels are built for both Python 2 and Python 3:
+    # The code runs with both Python 2 and Python 3:
     options={"bdist_wheel": {"universal": True}}
     )
 
@@ -355,18 +325,25 @@ try:
 
     # Some setuptools-specific options can be added:
 
-    addtl_setup_options = {
+    addtl_setup_options = dict(
 
-        # Allows python setup.py nosetests to do the right thing:
-        'use_2to3': True,
-        'tests_require': ['nose', 'numpy'],
+        project_urls={
+            'Documentation':
+                'https://uncertainties-python-package.readthedocs.io/',
+            'Source': 'https://github.com/lebigot/uncertainties'
+        },
+
+        install_requires=['future'],
+
+        tests_require=['nose', 'numpy'],
+        
         # Optional dependencies install using:
         # `easy_install uncertainties[optional]`
-        'extras_require': {
+        extras_require={
             'optional': ['numpy'],
             'docs': ['sphinx'],
         }
-    }
+    )
 
     # easy_install uncertainties[tests] option:
     addtl_setup_options['extras_require']['tests'] = (
@@ -381,13 +358,6 @@ try:
 
 except ImportError:
     from distutils.core import setup
-
-    # distutils.core.setup is not like setuptools: it does not have an
-    # option for automatically calling 2to3 if Python 3 is used, so the
-    # conversion is done here:
-    if sys.version_info >= (3,):
-        import subprocess
-        subprocess.check_call(["2to3", "-w", "."])
 
 # End of setup definition
 

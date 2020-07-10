@@ -5,13 +5,14 @@ Unit tests for the uncertainties.lib1to2 code update package.
 
 Meant to be run through nosetests.
 
-(c) 2013 by Eric O. LEBIGOT (EOL).
+(c) 2013-2020 by Eric O. LEBIGOT (EOL).
 '''
 
 # Code inspired by:
 #
 # - lib2to3.tests.test_fixers.py
 
+from builtins import str
 import sys
 import os
 
@@ -55,6 +56,8 @@ else:
         source, expected -- strings (typically with Python code).
         """
 
+        # !! str() is from future's builtins and is only needed for Python 2,
+        # where it is mostly equivalent to unicode():
         new = str(
             refactorer.refactor_string(support.reformat(source), '<string>'))
 
@@ -74,7 +77,7 @@ else:
         refactorer = support.get_refactorer(
             fixer_pkg='lib1to2', fixers=[fixer])
 
-        for (input_str, out_str) in list(tests.items()):
+        for (input_str, out_str) in tests.items():
             check_refactor(refactorer, input_str, out_str)
 
     def test_fix_std_dev():

@@ -12,8 +12,15 @@ Main module for the uncertainties package, with internal functions.
 # Uncertainties can then be calculated by using this local linear
 # approximation of the original function.
 
-  # Many analytical derivatives depend on this
+from __future__ import division  # Many analytical derivatives depend on this
 
+from builtins import str
+from builtins import next
+from builtins import map
+from builtins import zip
+from builtins import range
+from past.builtins import basestring
+from builtins import object
 import sys
 import re
 import math
@@ -244,7 +251,7 @@ else:
         values_funcs = tuple(
             AffineScalarFunc(
                 value,
-                LinearCombination(dict(list(zip(variables, coords)))))
+                LinearCombination(dict(zip(variables, coords))))
             for (coords, value) in zip(transform, nominal_values))
 
         return values_funcs
@@ -305,7 +312,7 @@ def partial_derivative(f, arg_ref):
 
     # Which set of function parameter contains the variable to be
     # changed? the positional or the optional keyword arguments?
-    change_kwargs = isinstance(arg_ref, str)
+    change_kwargs = isinstance(arg_ref, basestring)
 
     def partial_derivative_of_f(*args, **kwargs):
         """
@@ -964,18 +971,18 @@ def robust_align(orig_str, fill_char, align_option, width):
 # Maps some Unicode code points ("-", "+", and digits) to their
 # superscript version:
 TO_SUPERSCRIPT = {
-    0x2b: '⁺',
-    0x2d: '⁻',
-    0x30: '⁰',
-    0x31: '¹',
-    0x32: '²',
-    0x33: '³',
-    0x34: '⁴',
-    0x35: '⁵',
-    0x36: '⁶',
-    0x37: '⁷',
-    0x38: '⁸',
-    0x39: '⁹'
+    0x2b: u'⁺',
+    0x2d: u'⁻',
+    0x30: u'⁰',
+    0x31: u'¹',
+    0x32: u'²',
+    0x33: u'³',
+    0x34: u'⁴',
+    0x35: u'⁵',
+    0x36: u'⁶',
+    0x37: u'⁷',
+    0x38: u'⁸',
+    0x39: u'⁹'
     }
 
 # Inverted TO_SUPERSCRIPT table, for use with unicode.translate():
@@ -993,22 +1000,30 @@ def to_superscript(value):
     value -- integer.
     '''
 
-    return ('%d' % value).translate(TO_SUPERSCRIPT)
+    return (u'%d' % value).translate(TO_SUPERSCRIPT)
 
-def from_superscript(number_str):
+def nrmlze_superscript(number_str):
     '''
-    Converts a string with superscript digits and sign into an integer.
+    Return a string with superscript digits transformed into regular digits.
+
+    Non-superscript digits are not changed before the conversion. Thus, the
+    string can also contain regular digits.
 
     ValueError is raised if the conversion cannot be done.
 
-    number_str -- basestring object.
+    number_str -- string to be converted (of type str, but also possibly, for 
+    Python 2, unicode, which allows this string to contain superscript digits).
     '''
+    # !! Python 3 doesn't need this str(), which is only here for giving the
+    # .translate() method to str objects in Python 2 (this str() comes
+    # from the builtins module of the future package and is therefore
+    # a subclass of unicode, in Python 2):
     return int(str(number_str).translate(FROM_SUPERSCRIPT))
 
 # Function that transforms an exponent produced by format_num() into
 # the corresponding string notation (for non-default modes):
 EXP_PRINT = {
-    'pretty-print': lambda common_exp: '×10%s' % to_superscript(common_exp),
+    'pretty-print': lambda common_exp: u'×10%s' % to_superscript(common_exp),
     'latex': lambda common_exp: r' \times 10^{%d}' % common_exp}
 
 # Symbols used for grouping (typically between parentheses) in format_num():
@@ -1403,7 +1418,7 @@ def format_num(nom_val_main, error_main, common_exp,
         if 'P' in options:
             # Unicode has priority over LaTeX, so that users with a
             # Unicode-compatible LaTeX source can use ±:
-            pm_symbol = '±'
+            pm_symbol = u'±'
         elif 'L' in options:
             pm_symbol = r' \pm '
         else:
@@ -2391,7 +2406,7 @@ class AffineScalarFunc(object):
 
             # Slot names can be given in various forms (string,
             # sequence, iterable):
-            if isinstance(slot_names, str):
+            if isinstance(slot_names, basestring):
                 all_slots.add(slot_names)  # Single name
             else:
                 all_slots.update(slot_names)
@@ -2402,7 +2417,7 @@ class AffineScalarFunc(object):
                 # !! It might happen that '__dict__' is itself a slot
                 # name. In this case, its value is saved
                 # again. Alternatively, the loop could be done on
-                # all_slots - set(('__dict__',)):
+                # all_slots - {'__dict__'}:
                 all_attrs[name] = getattr(self, name)
             except AttributeError:
                 pass  # Undefined slot attribute
@@ -2454,8 +2469,13 @@ def nan_if_exception(f):
 def get_ops_with_reflection():
 
     """
-    Return operators with a reflection, along with their derivatives
-    (for float operands).
+    Return operators with a reflection, along with their partial derivatives.
+
+    Operators are things like +, /, etc. Those considered here have two
+    arguments and can be called through Python's reflected methods __r…__ (e.g.
+    __radd__).
+
+    See the code for details.
     """
 
     # Operators with a reflection:
@@ -2531,11 +2551,10 @@ def get_ops_with_reflection():
     # Undefined derivatives are converted to NaN when the function
     # itself can be calculated:
     for op in ['pow']:
-        ops_with_reflection[op] = list(map(nan_if_exception,
-                                      ops_with_reflection[op]))
-
-        ops_with_reflection['r'+op] = list(map(nan_if_exception,
-                                          ops_with_reflection['r'+op]))
+        ops_with_reflection[op] = [
+            nan_if_exception(func) for func in ops_with_reflection[op]]
+        ops_with_reflection['r'+op] = [
+            nan_if_exception(func) for func in ops_with_reflection['r'+op]]
 
     return ops_with_reflection
 
@@ -2923,28 +2942,31 @@ POSITIVE_DECIMAL_UNSIGNED_OR_NON_FINITE = r'((\d*)(\.\d*)?|nan|NAN|inf|INF)'
 # Regexp for a number with uncertainty (e.g., "-1.234(2)e-6"), where
 # the uncertainty is optional (in which case the uncertainty is
 # implicit). The uncertainty can also be nan or NAN:
-NUMBER_WITH_UNCERT_RE_STR = r'''
+#
+# !! WARNING: in Python 2, the code relies on "… % <unicode string>" returning
+# a Unicode string (even if the template is not Unicode):
+NUMBER_WITH_UNCERT_RE_STR = u'''
     ([+-])?  # Sign
     %s  # Main number
-    (?:\(%s\))?  # Optional uncertainty
+    (?:\\(%s\\))?  # Optional uncertainty
     (?:
-        (?:[eE]|\s*×\s*10)
+        (?:[eE]|\\s*×\\s*10)
         (.*)
     )?  # Optional exponent
     ''' % (POSITIVE_DECIMAL_UNSIGNED_OR_NON_FINITE,
            POSITIVE_DECIMAL_UNSIGNED_OR_NON_FINITE)
 
 NUMBER_WITH_UNCERT_RE_MATCH = re.compile(
-    "%s$" % NUMBER_WITH_UNCERT_RE_STR, re.VERBOSE).match
+    u"%s$" % NUMBER_WITH_UNCERT_RE_STR, re.VERBOSE).match
 
 # Number with uncertainty with a factored exponent (e.g., of the form
 # (... +/- ...)e10): this is a loose matching, so as to accommodate
 # for multiple formats:
-NUMBER_WITH_UNCERT_GLOBAL_EXP_RE_MATCH = re.compile(r'''
-    \(
+NUMBER_WITH_UNCERT_GLOBAL_EXP_RE_MATCH = re.compile(u'''
+    \\(
     (?P<simple_num_with_uncert>.*)
-    \)
-    (?:[eE]|\s*×\s*10) (?P<exp_value>.*)
+    \\)
+    (?:[eE]|\\s*×\\s*10) (?P<exp_value>.*)
     $''', re.VERBOSE).match
 
 class NotParenUncert(ValueError):
@@ -2955,12 +2977,18 @@ class NotParenUncert(ValueError):
     '''
 
 def parse_error_in_parentheses(representation):
+    # !!!! The code seems to handle superscript exponents, but the
+    # docstring doesn't reflect this!?
     """
     Return (value, error) from a string representing a number with
     uncertainty like 12.34(5), 12.34(142), 12.5(3.4), 12.3(4.2)e3, or
     13.4(nan)e10.  If no parenthesis is given, an uncertainty of one
     on the last digit is assumed.
 
+    The digits between parentheses correspond to the same number of digits
+    at the end of the nominal value (the decimal point in the uncertainty
+    is optional). Example: 12.34(142) = 12.34±1.42.
+    
     Raises ValueError if the string cannot be parsed.
     """
 
@@ -2979,7 +3007,7 @@ def parse_error_in_parentheses(representation):
 
     # Global exponent:
     if exponent:
-        factor = 10.**from_superscript(exponent)
+        factor = 10.**nrmlze_superscript(exponent)
     else:
         factor = 1
 
@@ -3012,7 +3040,7 @@ def parse_error_in_parentheses(representation):
     return (value, uncert_value)
 
 # Regexp for catching the two variable parts of -1.2×10⁻¹²:
-PRETTY_PRINT_MATCH = re.compile(r'(.*?)\s*×\s*10(.*)').match
+PRETTY_PRINT_MATCH = re.compile(u'(.*?)\\s*×\\s*10(.*)').match
 
 def to_float(value_str):
     '''
@@ -3036,7 +3064,7 @@ def to_float(value_str):
     match = PRETTY_PRINT_MATCH(value_str)
     if match:
         try:
-            return float(match.group(1))*10.**from_superscript(match.group(2))
+            return float(match.group(1))*10.**nrmlze_superscript(match.group(2))
         except ValueError:
             raise ValueError('Mantissa or exponent incorrect in pretty-print'
                              ' form %s' % value_str)
@@ -3079,7 +3107,7 @@ def str_to_number_with_uncert(representation):
         exp_value_str = match.group('exp_value')
 
         try:
-            exponent = from_superscript(exp_value_str)
+            exponent = nrmlze_superscript(exp_value_str)
         except ValueError:
             raise ValueError(cannot_parse_ufloat_msg_pat % representation)
 
@@ -3089,7 +3117,7 @@ def str_to_number_with_uncert(representation):
     else:
         factor = 1  # No global exponential factor
 
-    match = re.match(r'(.*)(?:\+/-|±)(.*)', representation)
+    match = re.match(u'(.*)(?:\\+/-|±)(.*)', representation)
     if match:
 
         (nom_value, uncert) = match.groups()

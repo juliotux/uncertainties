@@ -1,19 +1,18 @@
 uncertainties
 =============
 
-
-.. image:: https://travis-ci.org/lebigot/uncertainties.svg?branch=master
-   :target: https://travis-ci.org/lebigot/uncertainties
-.. image:: https://ci.appveyor.com/api/projects/status/j5238244myqx0a0r?svg=true
-   :target: https://ci.appveyor.com/project/lebigot/uncertainties
-.. image:: https://codecov.io/gh/lebigot/uncertainties/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/lebigot/uncertainties/
 .. image:: https://readthedocs.org/projects/uncertainties-python-package/badge/?version=latest
    :target: http://uncertainties-python-package.readthedocs.io/en/latest/?badge=latest
 .. image:: https://img.shields.io/pypi/v/uncertainties.svg
    :target: https://pypi.org/project/uncertainties/
-
-**WARNING**: the ``master`` branch do not seem to be in a working condition. It is currently advisable to use this package through `PyPI <https://pypi.org/project/uncertainties>`_ or `Conda <https://anaconda.org/conda-forge/uncertainties>`_ (package version 3.1.2 only).
+.. image:: https://pepy.tech/badge/uncertainties/week
+   :target: https://pepy.tech/badge/uncertainties/week
+.. image:: https://codecov.io/gh/lebigot/uncertainties/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/lebigot/uncertainties/
+.. image:: https://travis-ci.org/lebigot/uncertainties.svg?branch=master
+   :target: https://travis-ci.org/lebigot/uncertainties
+.. image:: https://ci.appveyor.com/api/projects/status/j5238244myqx0a0r?svg=true
+   :target: https://ci.appveyor.com/project/lebigot/uncertainties
 
    
 This is the ``uncertainties`` Python package, which performs **transparent
@@ -32,25 +31,21 @@ This package also automatically calculates derivatives:
     >>> (2*x+1000).derivatives[x]
     2.0
 
-Some useful links:
+The main documentation is available at
+http://uncertainties-python-package.readthedocs.io/.
 
-* Documentation: http://uncertainties-python-package.readthedocs.io/
-* Issues: https://github.com/lebigot/uncertainties/issues/
-* Python Package Index entry: https://pypi.org/project/uncertainties
-* Code: https://github.com/lebigot/uncertainties/
+Git branches
+------------
 
-GitHub
-------
-
-The ``release`` branch is the latest stable release for Python 2.7+ (including Python 3+ through
-``2to3``), while the ``release_python2.3`` branch is the same but for Python 2.3 to
-2.6 (with unit tests only run with Python 2.6). They should pass the tests.
+The ``release`` branch is the latest stable release. It should pass the tests.
 
 
-``master*`` branches in the Github repository are bleeding-edge, and do not necessarily pass the tests. The ``master`` and ``master_python2.3`` are the latest, relatively stable versions (while other ``master*`` branches are more experimental).
+``master*`` branches in the Github repository are bleeding-edge, and do not
+necessarily pass the tests. The ``master`` branch is the latest, relatively
+stable versions (while other ``master*`` branches are more experimental).
 
 Other branches might be present in the GitHub repository, but they are
-also temporary and represent work in progress that does not necessarily run
+typically temporary and represent work in progress that does not necessarily run
 properly yet.
 
 License
